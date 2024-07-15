@@ -1,0 +1,43 @@
+app:
+  applicationId: ${APP_ID:52565685-666d-4da7-b9d2-034af780217c}
+  env: ${APP_ENV:custom-test}
+  host: ${APP_HOST:https://localhost:9000}
+  excludePaths:
+    - "/logout"
+  openApiConf:
+    path: /openapi
+  authentication:
+    usernamePassword:
+      type: JSON
+      loginPath: /api/jwt/auth/signin
+      usernameField: username
+      passwordField: password
+      scanUsername: "user"
+      scanPassword: "password"
+    tokenExtraction:
+      type: TOKEN_PATH
+      value: "token"
+    tokenAuthorization:
+      type: HEADER
+      value: Authorization
+      tokenType: Bearer
+    testPath:
+      path: /api/jwt/items/search/i
+      success: ".*200.*"
+    loggedInIndicator: "\\QSign Out\\E"
+    loggedOutIndicator: ".*Location:.*/login.*"
+
+hawk:
+  spider:
+    base: false
+    postmanConfig:
+      filePath: javaspringvulny_postman_collection.json
+  failureThreshold: high
+hawkAddOn:
+  scripts:
+    - name: api1:2019-tennant-check.js
+      id: 1000012
+      type: active
+      path: stackhawk.d
+      language: JAVASCRIPT
+  spider: false
