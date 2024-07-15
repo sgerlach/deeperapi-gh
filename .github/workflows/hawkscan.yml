@@ -16,6 +16,10 @@ jobs:
   stackhawk-hawkscan:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - name: Check out Repo!
         uses: actions/checkout@v2
       - name: Build and Run Vulny!
