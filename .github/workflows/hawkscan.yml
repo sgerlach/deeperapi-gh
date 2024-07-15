@@ -29,6 +29,8 @@ jobs:
         env:
           APP_ENV: GHA
           SARIF_ARTIFACT: true
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          BRANCH_NAME: ${{ github.head_ref }}
         with:
           codeScanningAlerts: true
           githubToken: ${{ github.token }}
