@@ -21,7 +21,7 @@ jobs:
       - name: Build and Run Vulny!
         run: docker-compose build && docker-compose up -d
       - name: HawkScan
-        uses: ./stackhawk/hawkscan-action@v2.2.0
+        uses: stackhawk/hawkscan-action@v2.2.0
         env:
           APP_ENV: GHA
         with:
@@ -29,4 +29,4 @@ jobs:
           githubToken: ${{ github.token }}
           apiKey: ${{ secrets.HAWK_API_TOKEN }}
           configurationFiles: |
-            stackhawk.d/stackhawk-custom-params.yml
+            ./stackhawk.d/stackhawk-custom-params.yml
