@@ -24,7 +24,7 @@ jobs:
       - name: Build and Run Vulny!
         run: docker-compose build && docker-compose up -d
       - name: HawkScan
-        uses: stackhawk/hawkscan-action@latest
+        uses: stackhawk/hawkscan-action@2.2.0
         env:
           APP_ENV: GHA
           SARIF_ARTIFACT: true
@@ -38,11 +38,10 @@ jobs:
             ./stackhawk.d/stackhawk-custom-params.yml
             ./stackhawk.d/stackhawk-github-pr.yml
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v3.30.1
         with:
           # Path to SARIF file relative to the root of the repository
-          path: stackhawk.sarif
-          name: StackHawk_Report_$
+          sarif_file: stackhawk.sarif
           # Optional category for the results
           # Used to differentiate multiple results for one commit
           category: StackHawk
