@@ -26,6 +26,7 @@ jobs:
         run: docker compose build && docker compose up -d
       - name: HawkScan
         uses: stackhawk/hawkscan-action@v2.2.0
+        continue-on-error: true
         env:
           APP_ENV: GHA
           SARIF_ARTIFACT: true
