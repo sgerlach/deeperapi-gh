@@ -90,14 +90,14 @@ jobs:
             USER_RESPONSE=$(curl -s -X GET https://api.stackhawk.com/api/v1/user \
               -H "Authorization: Bearer $TOKEN" \
               -H "Accept: application/json")
-            
+          
             ORG_ID=$(echo "$USER_RESPONSE" | jq -r '.user.external.organizations[0].organization.id')
-            
+          
             if [ "$ORG_ID" = "null" ] || [ -z "$ORG_ID" ]; then
               echo "::error::Could not determine organization ID"
               exit 1
             fi
-            
+          
             echo "Organization ID from user: $ORG_ID"
           fi
           
@@ -113,9 +113,9 @@ jobs:
             '.applicationScanResults[] | select(.tags[]? | select(.name == "_GIT_COMMIT_SHA") | .value == $sha) | .scan | @json' | head -n1)
           
           if [ -z "$SCAN" ] || [ "$SCAN" = "null" ]; then
-            echo "::warning::No scan found with SHA $SHA"
+            echo "::error::No scan found with SHA $SHA"
             echo "found=false" >> $GITHUB_OUTPUT
-            exit 0
+            exit 1
           fi
           
           # Extract scan details
