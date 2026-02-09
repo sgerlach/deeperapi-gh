@@ -40,6 +40,9 @@ app:
       success: ".*200.*"
     loggedInIndicator: "\\QSign Out\\E"
     loggedOutIndicator: ".*Location:.*/login.*"
+tags:
+  - name: _GIT_COMMIT_SHA
+    value: ${MY_COMMIT_SHA_ENV}
 
 
 
