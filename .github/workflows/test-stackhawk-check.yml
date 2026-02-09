@@ -12,10 +12,12 @@ on:
         required: false
         default: 'stackhawk.yml'
       application-id:
-        description: 'The StackHawk Application ID of this applicaiton'
+        description: 'The StackHawk Application ID of this application'
+        required: false
         default: ''
       organization-id:
         description: 'StackHawk OrgID'
+        required: false
         default: ''
 
 jobs:
@@ -31,6 +33,7 @@ jobs:
           STACKHAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
           CONFIG_PATH: ${{ github.event.inputs.config-path || 'stackhawk.yml' }}
           INPUT_APP_ID: ${{ github.event.inputs.application-id }}
+          INPUT_ORG_ID: ${{ github.event.inputs.organization-id }}
         run: |
           set -e
           
@@ -69,21 +72,34 @@ jobs:
             -H "X-ApiKey: $STACKHAWK_API_KEY")
           
           TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.token')
-
-          # Get user info to extract org ID
-          echo "Fetching user information..."
-          USER_RESPONSE=$(curl -s -X GET https://api.stackhawk.com/api/v1/user \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Accept: application/json")
           
-          ORG_ID=$(echo "$USER_RESPONSE" | jq -r '.user.external.organizations[0].organization.id')
-          
-          if [ "$ORG_ID" = "null" ] || [ -z "$ORG_ID" ]; then
-            echo "::error::Could not determine organization ID"
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "::error::Authentication failed"
             exit 1
           fi
           
-          echo "Authenticated. Org ID: $ORG_ID"
+          echo "Authenticated successfully"
+          
+          # Get org ID from input or fetch from user info
+          if [ -n "$INPUT_ORG_ID" ]; then
+            ORG_ID="$INPUT_ORG_ID"
+            echo "Using organization ID from input: $ORG_ID"
+          else
+            # Get user info to extract org ID
+            echo "Fetching user information..."
+            USER_RESPONSE=$(curl -s -X GET https://api.stackhawk.com/api/v1/user \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/json")
+            
+            ORG_ID=$(echo "$USER_RESPONSE" | jq -r '.user.external.organizations[0].organization.id')
+            
+            if [ "$ORG_ID" = "null" ] || [ -z "$ORG_ID" ]; then
+              echo "::error::Could not determine organization ID"
+              exit 1
+            fi
+            
+            echo "Organization ID from user: $ORG_ID"
+          fi
           
           # List scans
           echo "Fetching scans for application $APP_ID..."
@@ -92,9 +108,9 @@ jobs:
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/json")
           
-          # Find scan with matching SHA
+          # Find scan with matching SHA in tags array
           SCAN=$(echo "$SCANS_RESPONSE" | jq -r --arg sha "$SHA" \
-            '.applicationScanResults[] | select(.scan.sha == $sha or .scan.gitCommitSha == $sha) | .scan | @json' | head -n1)
+            '.applicationScanResults[] | select(.tags[]? | select(.name == "_GIT_COMMIT_SHA") | .value == $sha) | .scan | @json' | head -n1)
           
           if [ -z "$SCAN" ] || [ "$SCAN" = "null" ]; then
             echo "::warning::No scan found with SHA $SHA"
@@ -103,10 +119,10 @@ jobs:
           fi
           
           # Extract scan details
-          SCAN_ID=$(echo "$SCAN" | jq -r '.scanId')
+          SCAN_ID=$(echo "$SCAN" | jq -r '.id')
           SCAN_STATUS=$(echo "$SCAN" | jq -r '.status')
           SCAN_APP_ID=$(echo "$SCAN" | jq -r '.applicationId')
-          ENV_ID=$(echo "$SCAN" | jq -r '.environmentId')
+          ENV_ID=$(echo "$SCAN" | jq -r '.envId')
           SCAN_URL="https://app.stackhawk.com/scans/${ORG_ID}/${SCAN_APP_ID}/${ENV_ID}/${SCAN_ID}"
           
           # Set outputs
