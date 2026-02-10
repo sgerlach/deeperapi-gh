@@ -104,13 +104,13 @@ jobs:
           # List scans
           echo "Fetching scans for application $APP_ID..."
           SCANS_RESPONSE=$(curl -s -X GET \
-            "https://api.stackhawk.com/api/v1/scan/${ORG_ID}?appIds=${APP_ID}&sortDir=desc&pageSize=100" \
+            "https://api.stackhawk.com/api/v1/scan/${ORG_ID}?appIds=${APP_ID}&tag=_GIT_COMMIT_SHA:${SHA}" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/json")
           
-          # Find scan with matching SHA in tags array
-          SCAN=$(echo "$SCANS_RESPONSE" | jq -r --arg sha "$SHA" \
-            '.applicationScanResults[] | select(.tags[]? | select(.name == "_GIT_COMMIT_SHA") | .value == $sha) | .scan | @json' | head -n1)
+          # Find scan with matching SHA in tags array - not needed becasue we now do this in the search
+          # SCAN=$(echo "$SCANS_RESPONSE" | jq -r --arg sha "$SHA" \
+          #  '.applicationScanResults[] | select(.tags[]? | select(.name == "_GIT_COMMIT_SHA") | .value == $sha) | .scan | @json' | head -n1)
           
           if [ -z "$SCAN" ] || [ "$SCAN" = "null" ]; then
             echo "::error::No scan found with SHA $SHA"
